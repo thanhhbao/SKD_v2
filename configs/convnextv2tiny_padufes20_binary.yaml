@@ -1,0 +1,58 @@
+# PAD-UFES-20 (smartphone clinical images) - binary cancer vs non-cancer
+experiment:
+  name: padufes20_binary
+  base_output_dir: outputs
+  check_val_every_n_epoch: 1
+  save_top_k: 3
+
+model:
+  name: convnextv2_tiny
+  lr: 0.0003
+  weight_decay: 0.01
+  device: cuda
+  loss_name: FocalLoss
+  loss_kwargs:
+    # For binary (2-class) focal loss: alpha can be [alpha_neg, alpha_pos]
+    alpha: [0.25, 0.75]
+    gamma: 2.0
+
+data:
+  dataset_name: load_pad_ufes_20
+  num_classes: 2
+  train_batch_size: 32
+  test_batch_size: 32
+  val_batch_size: 32
+  cache_dir: .cache
+  dataset_kwargs:
+    preprocessor:
+      name: BasicImagePreprocessor
+      image_size: 224
+    # Point these to your downloaded PAD-UFES-20:
+    csv_path: data/PAD-UFES-20/metadata.csv
+    img_dir: data/PAD-UFES-20/images
+    img_id_col: img_id
+    label_col: diagnostic
+    label_mode: binary_cancer   # 1 = cancer (BCC/SCC/MEL), 0 = non-cancer (ACK/NEV/SEK)
+    split_by: patient_id
+    test_size: 0.2
+    seed: 42
+    img_ext: png
+
+trainer:
+  seed: 42
+  devices: 1
+  accelerator: gpu
+  max_epochs: 25
+  precision: 16-mixed
+  log_every_n_steps: 30
+  gradient_clip_val: 1
+  enable_progress_bar: true
+
+metrics:
+  task: binary
+  average: macro
+  include_precision: true
+  include_recall: true
+  include_confusion_matrix: true
+  thresholds: [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]
+  metric_priority: f1

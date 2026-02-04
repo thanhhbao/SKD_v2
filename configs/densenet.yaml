@@ -1,0 +1,61 @@
+# Basic experiment settings
+experiment:
+  name: exp1
+  base_output_dir: outputs
+  check_val_every_n_epoch: 1
+  save_top_k: 3
+
+# Model configuration
+model:
+  name: densenet121
+  loss_name: FocalLoss # Đổi sang FocalLoss
+  lr: 0.00025
+  weight_decay: 0.1
+  device: cuda
+  loss_kwargs:
+    alpha: [0.5, 0.5] # alpha_neg, alpha_pos #0.4 - 0.6
+    gamma: 2.0
+
+# Dataset configuration
+data:
+  dataset_name: load_isic2018
+  num_classes: 2 # Đổi sang 2 cho FocalLoss (treat binary as 2 classes)
+  train_batch_size: 32
+  test_batch_size: 32
+  val_batch_size: 32
+  test_size: 0.2
+  use_weighted_sampler: true
+  class_weights: [0.82, 0.18] # Tỷ lệ inverse của val (negative, positive)
+  cache_dir: .cache
+  dataset_kwargs:
+    preprocessor:
+      name: BasicImagePreprocessor
+      img_size: 224
+    train_csv_path: data/ISIC2018_Task3_Training_GroundTruth/ISIC2018_Task3_Training_GroundTruth/ISIC2018_Task3_Training_GroundTruth.csv
+    train_img_dir: data/ISIC2018_Task3_Training_Input
+    train_img_col: image
+    train_target_col: [MEL, BCC] # positive cols
+    test_csv_path: data/ISIC2018_Task3_Test_GroundTruth/ISIC2018_Task3_Test_GroundTruth/ISIC2018_Task3_Test_GroundTruth.csv
+    test_img_dir: data/ISIC2018_Task3_Test_Input
+    test_img_col: image
+    test_target_col: [MEL, BCC] # positive cols
+
+# Training configuration
+trainer:
+  seed: 42
+  devices: 1
+  accelerator: gpu
+  accumulate_grad_batches: 4
+  log_every_n_steps: 30
+  max_epochs: 10
+  gradient_clip_val: 1
+  precision: 16-mixed
+  enable_progress_bar: true
+
+# Metrics configuration
+metrics:
+  task: binary # Giữ binary, nhưng metrics sẽ dùng y_pred[:,1] như logits positive
+  average: macro
+  include_precision: true
+  include_recall: true
+  include_confusion_matrix: true
