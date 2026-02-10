@@ -37,24 +37,27 @@ class TrainerWrapper:
         metrics_config = self.config.get('metrics', {})
         thresholds = metrics_config.get('thresholds', np.arange(0.1, 1.0, 0.1))
         metric_priority = metrics_config.get('metric_priority', 'f1')
-        average = metrics_config.get('average', 'macro')
+        average = metrics_config.get('average', 'binary')
 
         model.eval()  # Eval mode
-        all_logits_pos = []
+        all_probs = []
         all_targets = []
 
         with torch.no_grad():
             for batch in val_dataloader:
                 x = batch['pixel_values'].to(model.device)
-                y = batch['label'].cpu().numpy().squeeze()
+                y = batch['label'].view(-1).long().cpu().numpy()
                 outputs = model(x)  # (B, 2)
                 probs_pos = torch.softmax(outputs, dim=1)[:, 1].cpu().numpy()
-                all_logits_pos.extend(probs_pos)
+                all_probs.extend(probs_pos)
                 all_targets.extend(y)
 
-        all_logits_pos = np.array(all_logits_pos)
+        all_probs = np.array(all_probs)
         all_targets = np.array(all_targets)
-        all_probs = np.array(all_logits_pos)
+        all_probs = np.array(all_probs)
+        print("prob stats:", all_probs.min(), all_probs.max(), all_probs.mean())
+        print("target mean:", all_targets.mean())
+
 
         best_threshold = None
         best_score = 0
@@ -64,9 +67,9 @@ class TrainerWrapper:
             preds_binary = (all_probs >= th).astype(int)
             metrics = {
                 'accuracy': accuracy_score(all_targets, preds_binary),
-                'precision': precision_score(all_targets, preds_binary, average=average, zero_division=0),
-                'recall': recall_score(all_targets, preds_binary, average=average, zero_division=0),
-                'f1': f1_score(all_targets, preds_binary, average=average, zero_division=0),
+                'precision': precision_score(all_targets, preds_binary, average='binary', pos_label=1, zero_division=0),
+                'recall': recall_score(all_targets, preds_binary, average='binary', pos_label=1, zero_division=0),
+                'f1': f1_score(all_targets, preds_binary, average='binary', pos_label=1, zero_division=0),
                 'confusion_matrix': confusion_matrix(all_targets, preds_binary).tolist()
             }
             score = metrics[metric_priority]

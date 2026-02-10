@@ -13,7 +13,7 @@ model:
   loss_name: FocalLoss
   loss_kwargs:
     # For binary (2-class) focal loss: alpha can be [alpha_neg, alpha_pos]
-    alpha: [0.25, 0.75]
+    alpha: [0.5, 0.5]
     gamma: 2.0
 
 data:
@@ -32,7 +32,7 @@ data:
     img_dir: data/PAD-UFES-20/images
     img_id_col: img_id
     label_col: diagnostic
-    label_mode: binary_cancer   # 1 = cancer (BCC/SCC/MEL), 0 = non-cancer (ACK/NEV/SEK)
+    label_mode: binary_cancer # 1 = cancer (BCC/SCC/MEL), 0 = non-cancer (ACK/NEV/SEK)
     split_by: patient_id
     test_size: 0.2
     seed: 42
@@ -50,9 +50,9 @@ trainer:
 
 metrics:
   task: binary
-  average: macro
+  average: binary
   include_precision: true
   include_recall: true
   include_confusion_matrix: true
-  thresholds: [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]
+  thresholds: [0.4]
   metric_priority: f1

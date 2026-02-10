@@ -81,7 +81,12 @@ def main():
 
     # Train
     trainer.fit(model_wrapper, data_wrapper.train_dataloader(), data_wrapper.val_dataloader())
+    best_path = checkpoint_callback.best_model_path
+    print("Best ckpt:", best_path)
 
+    if best_path:
+        model_wrapper = ModelWrapper.load_from_checkpoint(best_path, **model_config)
+        model_wrapper = model_wrapper.to(model_config.get("device", "cuda"))
     # Evaluate with thresholds
     print("\nEvaluating model with multiple thresholds...")
     best_th, all_results = trainer.evaluate_with_thresholds(model_wrapper, data_wrapper.val_dataloader())
