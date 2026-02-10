@@ -28,8 +28,8 @@ data:
       name: BasicImagePreprocessor
       image_size: 224
     # Point these to your downloaded PAD-UFES-20:
-    csv_path: data/PAD-UFES-20/metadata.csv
-    img_dir: data/PAD-UFES-20/images
+    csv_path: /content/data_normal/metadata.csv
+    img_dir: /content/data_normal/images_all
     img_id_col: img_id
     label_col: diagnostic
     label_mode: binary_cancer # 1 = cancer (BCC/SCC/MEL), 0 = non-cancer (ACK/NEV/SEK)
